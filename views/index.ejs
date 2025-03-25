@@ -1,0 +1,1333 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/main.css">
+    <title>Home Page</title>
+</head>
+<body>
+
+
+    <div id = "home-page-container">
+        <div class = "timeline-box">
+            <div class = "box-around-posts-form">
+                <div class = "profile-picture-card">
+                      
+
+                    <form action="/profilePicture" method="POST" id="profilePictureForm" enctype="multipart/form-data">
+                        <div class = "profile-picture">
+                            <img id = "users-profile-picture" class = "users-profile-picture" src=""> 
+                           
+                                <label id = "profile-photo-selector-label" for="profile-photo-selector" class="profile-photo-label">+</label>
+                                <input type = "file" name="profile-photo"  id="profile-photo-selector" accept="image/jpeg, image/png, img/jpg" hidden> 
+                                <input type="submit" value="Save" id = "save-button"  aria-label="Post">
+                        </div>
+                    </form>  
+                
+                
+               
+            </div>
+                <div class = "posts-form">
+
+                   
+
+                    <div class = "text-box">
+                        <form action="/createPost" method="POST" id="formP" enctype="multipart/form-data">
+                            <textarea id ="user-text"  name = "uText" maxlength="284" placeholder="What's on your mind?"></textarea>
+                            <!-- <textarea id ="user-text-invisible"  name = "uFakeText" maxlength="284"></textarea> -->
+                            <div id="image-container">
+                                <img id="preview" class="preview" src="" style="display: none;">
+                                <div id="image-top-right-side" style="display: none;">
+                                    <button id="cancel-image-button">X</button>
+                                </div>
+                            </div>
+                           
+                               
+                            <div class = "interface">
+
+                                <div class="interface-options-bar">
+                                    <div class = "icon-boxes-container">
+
+                                        <div class = "icon-boxes" id = "image-icon">
+                                            <input type="button" id="get-file" class = "icons">
+                                        </div>
+
+                                        <div class = "icon-boxes" id = "gif-icon">
+                                            <input type="button" id="gif-window" class = "icons">
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class = "post-bar">
+
+                                    <div class = "word-count-container">
+                                        <div class = "word-count">
+                                            <div id="output" class ="circular-progress">
+                                                <div id="black-circle"></div>
+                                            </div>
+                                        </div> 
+                                     </div>
+                                    
+                                    <div class = "post-button-container">
+                                        <div class ="post-button">
+                                            <input type="file" name="mySelectedImage" id="file-selector" hidden>
+                                            <input type="submit" value="Post" id = "submit-button" aria-label="Post" disabled> <!-- disabled was here -->
+                                        </div>    
+                                    </div>
+                                    
+                                </div>
+
+                            </div>
+                        </form> 
+                    </div>
+
+                </div>
+            </div>
+        </div>  
+    </div>
+
+    <% if(locals.imgFile && locals.postText && postId) { %>
+        <% console.log("received content: ", postText); %>
+        <% console.log("received image file: ", imgFile); %>
+        <% var receivedImgFile = imgFile ; %>
+        <% var receivedContent = postText ; %>
+        <% console.log("received id: ", postId); %>
+        <% var receivedID = postId ; %>
+        <% var isValid = true; %>
+    <% }else if(locals.postText && postId) { %>
+        <% console.log("received content: ", postText); %>
+        <% var receivedContent = postText; %>
+        <% console.log("received id: ", postId); %>
+        <% var receivedID = postId ; %>
+    <% }else if (locals.imgFile && postId) { %>
+        <% console.log("received image file: ", imgFile); %>
+        <% var receivedImgFile = imgFile ; %>
+        <% console.log("received id: ", postId); %>
+        <% var receivedID = postId ; %>
+    <%}else if (locals.profilePic) { %>
+        <% console.log("received profile picture: ", profilePic); %>
+        <% var receivedProfilePicture = profilePic ; %>
+    <% } else if (locals.newText) {%>    
+        <% console.log("received Updated Text: ", newText); %>
+        <% var receivedUpdatedText = newText ; %>
+        <% } %>
+    
+    
+    <script>
+        const textArea = document.getElementById("user-text");
+        const form = document.getElementById("formP");
+        const getImageRightSide = document.getElementById("image-top-right-side");
+        const getImageCancelButton = document.getElementById("cancel-image-button");
+        // const popUpSaveButton = document.getElementById("popUpSaveButton");
+        const output = document.getElementById("output");
+        const dropDown = document.getElementById("drop-down-list");
+        const optionList = document.getElementById("options");
+        const getFileButton = document.getElementById("get-file");
+        const submitButton = document.getElementById("submit-button");
+        const preview = document.getElementById("preview");
+        const fileSelector = document.getElementById('file-selector');
+        const profilePhotoSelector = document.getElementById("profile-photo-selector");
+        const photoSelectorLabel = document.getElementById("profile-photo-selector-label");
+        const saveButton = document.getElementById("save-button");
+        const imgElement = document.getElementById("preview");
+        var pressedShiftEnter = 0;
+        var newLine = "\n";
+
+        const progressBar = document.querySelector('.circular-progress');
+        progressBar.style.background = `conic-gradient(#1D9BF0 0%, #555555 0deg)`;
+
+        
+
+        textArea.addEventListener('input', function(){
+            let sourceText = this.value;
+            // output.textContent = textArea.value.length;
+            const maxWords = 284;
+            const percentage = Math.min(this.value.length / maxWords * 100, 100);
+
+            progressBar.style.background = `conic-gradient(#1D9BF0 ${percentage}%, #555555 0deg)`;
+        
+            // updateSubmitButtonState();
+            submitButton.disabled = this.value.length === 0;
+            // submitButton.disabled = preview.style === "none";
+
+            if (!submitButton.disabled){
+                submitButton.classList.add("enabled");
+            }else{
+                submitButton.classList.remove("enabled");
+            }
+
+            if (this.value.length >= maxWords){
+                this.readOnly = true;
+                console.log("You've reached maximum character limit");
+            }
+            else if (this.readOnly && totalCharacters < maxWords){
+                this.readOnly = false; 
+            }
+
+        });
+
+
+        textArea.addEventListener("keydown", function(e){
+    
+            if(this.value.length >= 284 && e.key.length === 1){
+                e.preventDefault();
+            }else if (e.key === "Backspace" || e.key === "Delete" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+                this.readOnly = false;
+            }else if (e.key === 'Enter' && e.shiftKey){
+                e.preventDefault();
+                textArea.value += '\n'; 
+            } else if (e.key === 'Enter'){
+                e.preventDefault();
+                console.log(textArea.value);
+                submitButton.click();
+            }
+        });
+        
+        profilePhotoSelector.addEventListener('change', function(event){
+            const file = event.target.files[0];
+
+            if(file){
+                const reader = new FileReader();
+                uploadingImage = true;
+                reader.onload = function(e) {
+                    document.getElementById("users-profile-picture").src = e.target.result;
+                    preview.innerHTML = `<img src="${e.target.result}" alt="profile-photo" >`;
+                    document.getElementById("users-profile-picture").style.display = "block";
+                    localStorage.setItem('userProfilePic', e.target.result);
+                    document.getElementById("users-profile-picture").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+                // console.log("imageeeee: " + getProfilePic);
+                photoSelectorLabel.style.visibility = "hidden";
+                saveButton.style.visibility = "visible";
+            }
+            
+        });
+
+        fileSelector.addEventListener('change', function(event) {
+            
+            const file = event.target.files[0];
+            if(file){
+                submitButton.disabled = this.value.length === 0;
+                const reader = new FileReader();
+                uploadingImage = true;
+                textArea.focus();
+                reader.onload = function(e) {
+                    document.getElementById("preview").src = e.target.result;
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 200px;">`;
+                    document.getElementById("preview").style.display = "block";
+                    getImageRightSide.style.display = "flex";
+                };
+                submitButton.classList.add("enabled");
+                reader.readAsDataURL(file);
+                
+            }
+            
+        });
+
+
+        getFileButton.addEventListener("click", function(event){
+            fileSelector.click();
+        });
+
+
+        getImageCancelButton.addEventListener("click", function(e){
+            e.preventDefault();
+            // document.getElementById("preview").src = e.target.result;
+
+            // preview.innerHTML = `<img src=" " style="display: none;">`;
+            document.getElementById("preview").src = '';
+            document.getElementById("preview").style.display = "none";
+            document.getElementById('file-selector').value = '';
+            getImageRightSide.style.display = "none";
+            console.log("Clicked");
+            submitButton.disabled = this.value.length === 0;
+
+        });
+
+        function createPost(content, imgFile, postId, timestamp){
+            var getProfilePic = localStorage.getItem('userProfilePic'); // Retrieve from localStorage
+            
+            const postedBox = document.createElement("div");
+            postedBox.id = postId;
+            postedBox.className = "posted-box";
+
+            const contentBox = document.createElement("div");
+            contentBox.className = "content-box";
+            postedBox.appendChild(contentBox);
+
+            const contentAreaBox = document.createElement("div");
+            contentAreaBox.className = "content-area-box";
+            contentBox.appendChild(contentAreaBox);
+
+            const userPicture = document.createElement("div");
+            userPicture.className = "user-picture";
+            contentAreaBox.appendChild(userPicture);
+
+            const profilePhotoHolder = document.createElement("div");
+            profilePhotoHolder.className = "profile-picture-holder";
+            userPicture.appendChild(profilePhotoHolder);
+
+            const userProfilePhoto = document.createElement("img");
+            userProfilePhoto.className = "users-profile-picture";
+            userProfilePhoto.id = "users-profile-picture";
+            if (getProfilePic) {
+                userProfilePhoto.src = getProfilePic; // Set the profile picture source
+            }
+            profilePhotoHolder.appendChild(userProfilePhoto);
+
+            const contentArea = document.createElement("div");
+            contentArea.className = "content-area";
+            contentAreaBox.appendChild(contentArea);
+
+            const timer = document.createElement("div");
+            timer.className = "posts-age";
+            function updateAge() {
+                const now = new Date().getTime();
+                const ageInMs = now - timestamp;
+                const seconds = Math.floor(ageInMs / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                // postedAge.textContent = seconds;
+        
+                if (days > 0) {
+                    // Display in days if older than 1 day
+                    timer.textContent = `${days}d`;
+                } else if (hours > 0) {
+                    // Display in hours if older than 1 hour but less than 1 day
+                    timer.textContent = `${hours}h`;
+                } else if (minutes > 0) {
+                    // Display in minutes if older than 1 minute but less than 1 hour
+                    timer.textContent = `${minutes}m`;
+                } else {
+                    // Display in seconds if less than 1 minute old
+                    timer.textContent = `${seconds}s`;
+                }
+            }
+
+            updateAge();
+            setInterval(updateAge, 1000);
+            // postedAge.appendChild(timer);
+
+            const userInfoPostBox = document.createElement("div");
+            userInfoPostBox.className = "user-info-post-box";
+            contentArea.appendChild(userInfoPostBox);
+
+            const postInformation = document.createElement("div");
+            postInformation.className = "post-information";
+            userInfoPostBox.appendChild(postInformation);
+
+            const userSidePostInformation = document.createElement("div");
+            userSidePostInformation.className = "user-side-post-information";
+            postInformation.appendChild(userSidePostInformation);
+
+            const usersProfileName = document.createElement("div");
+            usersProfileName.className = "users-profile-name";
+            usersProfileName.textContent = "JarJarBeats" 
+            userSidePostInformation.appendChild(usersProfileName);
+
+            const usersUserName = document.createElement("div");
+            usersUserName.className = "users-user-name";
+            usersUserName.textContent = "@jarjarbeats • ";
+            userSidePostInformation.appendChild(usersUserName);
+            userSidePostInformation.appendChild(timer);
+            
+            const toolSidePostInformation = document.createElement("div");
+            toolSidePostInformation.className = "tool-side-post-information"
+            postInformation.appendChild(toolSidePostInformation);
+//HERE JUAN-------------------
+            const options = document.createElement("div");
+            options.id = "options";
+            options.className = "options";           
+            
+
+            const body = document.getElementsByTagName('body')[0];
+            const bringForward = document.querySelector(".bring-body-forward");
+            const homePage = document.getElementById("home-page-container");
+
+            const moreButton = document.createElement("button");
+            moreButton.id = "drop-down-list";
+            moreButton.className = "drop-down-list";
+            
+            moreButton.addEventListener("click", function(){
+      
+                const optionsPopUp = document.createElement("div");
+                optionsPopUp.id = "optionsPopUp";
+                optionsPopUp.className = "optionsPopUp";
+                //toolSidePostInformation.appendChild(optionsPopUp); // COME BHACK HERE AND REMEMBER YOU CHANGED IT FROM POSTEDBOX TO THIS
+                postedBox.appendChild(optionsPopUp);
+
+
+                optionsPopUp.addEventListener("click", function(event){
+                    // alert("clicked");
+                    document.getElementById('optionsPopUp').remove();
+                    // document.getElementById('popup').style.display = "none";
+                    //}
+                    //if (event.target == document.getElementById('optionsPopUp')) {
+                        document.getElementById('optionspopup-content').remove();
+                });
+
+                const popUpContent = document.createElement("div");
+                popUpContent.className = "optionspopup-content";
+                popUpContent.id = "optionspopup-content";
+                // optionsPopUp.appendChild(popUpContent);
+                
+                toolSidePostInformation.appendChild(popUpContent);
+
+
+                const deleteOption = document.createElement("button");
+                deleteOption.className = "delete-option";
+                deleteOption.type = "submit";
+                deleteOption.textContent = "Delete";
+                // popUpContent.appendChild(deleteOption);
+    
+                deleteOption.addEventListener("click", function(event){
+                    event.preventDefault(); // Prevents the default action if this button is inside a form
+
+                    fetch(`/Home/DeletePost/${postId}`, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                            }
+                            // If successful, remove the post from the DOM
+                            document.getElementById(postId).remove();
+                            // return response.json(); // If your server responds with JSON data
+                        })
+                        .then(data => {
+                            console.log('Success:', data);
+                            deletePostByPostId(postId);
+                            location.reload();
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
+                    });
+
+                const editOption = document.createElement("button");
+                editOption.className = "edit-option";
+                editOption.textContent = "Edit";
+                // popUpContent.appendChild(editOption);
+                
+                editOption.addEventListener("click", function(event){
+                    event.preventDefault(); // Prevents the default action if this button is inside a form
+                    popUpContent.remove();
+                   
+                    const editButtonOptions = document.createElement("div");
+                    editButtonOptions.id = "edit-button-options"
+                    contentArea.appendChild(editButtonOptions);
+
+                    const cancelEditButton = document.createElement("button");
+                    cancelEditButton.id = "cancel-edit-button";
+                    cancelEditButton.textContent = "Cancel";
+                    editButtonOptions.appendChild(cancelEditButton);
+
+                    cancelEditButton.addEventListener("click", function(event){
+                        location.reload();
+                    });
+
+                    const popUpSaveButton = document.createElement("button");
+                    popUpSaveButton.id = "popUpSaveButton";
+                    popUpSaveButton.type = "submit";
+                    popUpSaveButton.textContent = "Save";
+                    // popUpContent.appendChild(popUpSaveButton);
+                    editButtonOptions.appendChild(popUpSaveButton);
+
+                    userTextPosted.disabled = false;
+
+                    postedBox.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center'
+                    });
+
+                    popUpSaveButton.addEventListener("click", function(event){
+                        console.log("Clicked save");
+                        fetch(`/Home/EditPost/${postId}`, { 
+                            method: 'PUT',
+                            headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ sentText: `${userTextPosted.value}`}),
+                             })
+                        .then(response => {
+                        if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                        return response.json(); 
+                            })
+                        .then(data => {
+                                // const converted = data.newText;
+                                console.log('Success ID:', data.id);
+                                console.log('Success newText:', data.newText);
+                                console.log('Success newTextArea:', userTextPosted.value);
+                                let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+                                console.log('Current Posts:', posts); // Log current posts array
+                                const index = posts.findIndex(post => post.postId === postId);
+                                // userTextPosted.innerHTML =  content.replace(/\n/g, "<br>");;
+                                if (index !== -1) {
+                                    // const updatedContent = converted.replace(/\n/g, "<br>");;
+                                    // Update the content for the post with the matching ID
+                                    console.log('value of newText:', data.newText);
+                                    posts[index].content = data.newText;
+                                    posts[index].timestamp = new Date().getTime(); // Update the timestamp too if needed
+                                    console.log("Updated Content for PostId " + data.id + " with: " + data.newText);
+                                } else {
+                                    // If post not found, you might want to add it or handle this case differently
+                                    console.log("Post with ID " + data.id + " not found for update.");
+                                    // Optionally add new post if it doesn't exist:
+                                    // postsContentOnly.push({ content: newText, postId: postId, timestamp: new Date().getTime() });
+                                }
+
+                                // Save the updated posts back to localStorage
+                                localStorage.setItem("posts", JSON.stringify(posts));
+                                
+                                location.reload();
+                                
+                                    })
+                                .catch((error) => {
+                            console.error('Error:', error);
+                            });
+ 
+                        });
+                    
+
+                    document.getElementById('optionsPopUp').remove();
+                });
+
+                
+
+
+                const menuItemDelete = document.createElement("div");
+                menuItemDelete.className = "menuItem";
+                menuItemDelete.id = "menuItem-delete";
+                menuItemDelete.appendChild(deleteOption);
+
+                const menuItemEdit = document.createElement("div");
+                menuItemEdit.className = "menuItem";
+                menuItemEdit.id = "menuItem-edit";
+                menuItemEdit.appendChild(editOption);
+
+                popUpContent.appendChild(menuItemDelete);
+                popUpContent.appendChild(menuItemEdit);
+                // popUpSaveButton.type = "submit";
+                // popUpSaveButton.textContent = "Save";
+
+
+            //    console.log("buttonclicked: " + buttonClick);
+            //    if(buttonClick == 2){
+            //     buttonClick = 0;
+            //     document.getElementById("optionsPopUp").remove();
+            //     document.getElementById("optionspopup-content").remove();
+            //     console.log("buttonclickedReset: " + buttonClick);
+            //    }
+            });
+        
+            toolSidePostInformation.appendChild(moreButton);
+
+            const userTextPosted = document.createElement("textarea");
+            userTextPosted.className = "user-text-posted";
+            userTextPosted.disabled = true;
+            userTextPosted.rows = "1";
+            userTextPosted.innerHTML =  content; //content.replace(/\n/g, "<br>");;//put at end if buggyy
+
+
+            // userTextPosted.addEventListener("keydown", function(e){
+    
+            //     if(this.value.length >= 284 && e.key.length === 1){
+            //         e.preventDefault();
+            //     }else if (e.key === "Backspace" || e.key === "Delete" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+            //         this.readOnly = false;
+            //     }else if (e.key === 'Enter' && e.shiftKey){
+            //         e.preventDefault();
+            //         userTextPosted.value += '\n'; 
+            //     } else if (e.key === 'Enter'){
+            //         e.preventDefault();
+            //         console.log(userTextPosted.value);
+            //     }
+            // });
+
+
+
+
+            // document.querySelectorAll("textarea").forEach(function(textarea) {
+            //     // textarea.style.height = "10px";
+            //     textarea.style.height = textarea.scrollHeight + "px";
+            //     textarea.style.overflowY = "hidden";
+
+            //     textarea.addEventListener("input", function() {
+            //         this.style.height = "auto";
+            //         this.style.height = this.scrollHeight + "px";
+            //     });
+            // });
+
+            // const userTextPostedBox = document.createElement("div"); //<><><><>
+            // userTextPostedBox.className = "user-text-posted-box";
+            // userTextPostedBox.appendChild(userTextPosted);
+            // userInfoPostBox.appendChild(userTextPostedBox);
+
+            
+            userInfoPostBox.appendChild(userTextPosted);
+
+             //here
+
+
+             userTextPosted.addEventListener("keydown", function(e){
+    
+    if(this.value.length >= 284 && e.key.length === 1){
+        e.preventDefault();
+    }else if (e.key === "Backspace" || e.key === "Delete" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+        this.readOnly = false;
+    }else if (e.key === 'Enter' && e.shiftKey){
+        e.preventDefault();
+        userTextPosted.value += '\n'; 
+    } else if (e.key === 'Enter'){
+        e.preventDefault();
+        console.log(userTextPosted.value);
+    }
+});
+
+
+             document.querySelectorAll("textarea").forEach(function(textarea) {
+                // textarea.style.minHeight = "10px";
+                // textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+    textarea.style.overflowY = "hidden";
+    
+    
+    textarea.addEventListener("input", function() {
+        this.style.height = "auto";
+        this.style.height = this.scrollHeight + "px";
+        
+    });
+    });
+            
+
+            const imgBox = document.createElement("div");
+            imgBox.className = "img-box";
+            contentArea.appendChild(imgBox);
+
+            const imgData = document.createElement("img");
+            imgData.className = "preview";
+            imgData.src = "/images/uploads/" + imgFile; 
+            imgBox.appendChild(imgData);
+
+            document.getElementById("home-page-container").appendChild(postedBox);
+   
+            console.log("createPost Function Content: " + content);
+            console.log("createPost Function ImageFile: " + imgFile);
+
+        }
+
+        function saveContent(content, imgFile, postId){
+            let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+            const now = new Date().getTime();
+            posts.push({ content: content, imgFile: imgFile, postId, timestamp: now});
+            console.log("saveContent Function Content: " + content);
+            console.log("saveContent Function ImageFile: " + imgFile);
+            localStorage.setItem("posts", JSON.stringify(posts));
+            createPost(content, imgFile, postId, now);
+        }
+        
+        function deletePostByPostId(postId) {
+            // Retrieving the current list of posts from Local Storage
+            let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+            // Filtering out the post with the specified postId
+            posts = posts.filter(post => post.postId !== postId);
+            // Saving the modified list back to Local Storage
+            localStorage.setItem("posts", JSON.stringify(posts));
+            console.log(`Post with ID ${postId} has been deleted from Local Storage.`);
+        }
+        
+       
+        function createPostOnlyContent(content, postId, timestamp){
+            var getProfilePic = localStorage.getItem('userProfilePic'); // Retrieve from localStorage
+   
+            const postedBox = document.createElement("div");
+            postedBox.id = postId;
+            postedBox.className = "posted-box";
+
+            const contentBox = document.createElement("div");
+            contentBox.className = "content-box";
+            postedBox.appendChild(contentBox);
+
+            const contentAreaBox = document.createElement("div");
+            contentAreaBox.className = "content-area-box";
+            contentBox.appendChild(contentAreaBox);
+
+            const userPicture = document.createElement("div");
+            userPicture.className = "user-picture";
+            contentAreaBox.appendChild(userPicture);
+
+            const profilePhotoHolder = document.createElement("div");
+            profilePhotoHolder.className = "profile-picture-holder";
+            userPicture.appendChild(profilePhotoHolder);
+
+            const userProfilePhoto = document.createElement("img");
+            userProfilePhoto.className = "users-profile-picture";
+            userProfilePhoto.id = "users-profile-picture";
+            if (getProfilePic) {
+                userProfilePhoto.src = getProfilePic; // Set the profile picture source
+            }
+            // userProfilePhoto.src = "/images/uploads/" + getProfilePic;
+            profilePhotoHolder.appendChild(userProfilePhoto);
+             
+    
+            const contentArea = document.createElement("div");
+            contentArea.className = "content-area";
+            contentAreaBox.appendChild(contentArea);
+    
+
+            const timer = document.createElement("div");
+            timer.className = "posts-age";
+            function updateAge() {
+                const now = new Date().getTime();
+                const ageInMs = now - timestamp;
+                const seconds = Math.floor(ageInMs / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                // postedAge.textContent = seconds;
+        
+                if (days > 0) {
+                    // Display in days if older than 1 day
+                    timer.textContent = `${days}d`;
+                } else if (hours > 0) {
+                    // Display in hours if older than 1 hour but less than 1 day
+                    timer.textContent = `${hours}h`;
+                } else if (minutes > 0) {
+                    // Display in minutes if older than 1 minute but less than 1 hour
+                    timer.textContent = `${minutes}m`;
+                } else {
+                    // Display in seconds if less than 1 minute old
+                    timer.textContent = `${seconds}s`;
+                }
+            }
+
+            updateAge();
+            setInterval(updateAge, 1000);
+            // postedAge.appendChild(timer);
+
+            const userInfoPostBox = document.createElement("div");
+            userInfoPostBox.className = "user-info-post-box";
+            contentArea.appendChild(userInfoPostBox);
+
+            const postInformation = document.createElement("div");
+            postInformation.className = "post-information";
+            userInfoPostBox.appendChild(postInformation);
+
+            const userSidePostInformation = document.createElement("div");
+            userSidePostInformation.className = "user-side-post-information";
+            postInformation.appendChild(userSidePostInformation);
+
+            const usersProfileName = document.createElement("div");
+            usersProfileName.className = "users-profile-name";
+            usersProfileName.textContent = "JarJarBeats" 
+            userSidePostInformation.appendChild(usersProfileName);
+
+            const usersUserName = document.createElement("div");
+            usersUserName.className = "users-user-name";
+            usersUserName.textContent = "@jarjarbeats • ";
+            userSidePostInformation.appendChild(usersUserName);
+            userSidePostInformation.appendChild(timer);
+
+            const toolSidePostInformation = document.createElement("div");
+            toolSidePostInformation.className = "tool-side-post-information"
+            postInformation.appendChild(toolSidePostInformation);
+//HERE JUAN-------------------
+            const options = document.createElement("div");
+            options.id = "options";
+            options.className = "options";           
+
+            const moreButton = document.createElement("button");
+            moreButton.id = "drop-down-list";
+            moreButton.className = "drop-down-list";
+            
+            moreButton.addEventListener("click", function(){
+          
+                const optionsPopUp = document.createElement("div");
+                optionsPopUp.id = "optionsPopUp";
+                optionsPopUp.className = "optionsPopUp";
+                //toolSidePostInformation.appendChild(optionsPopUp); // COME BHACK HERE AND REMEMBER YOU CHANGED IT FROM POSTEDBOX TO THIS
+                postedBox.appendChild(optionsPopUp);
+
+
+                optionsPopUp.addEventListener("click", function(event){
+                    // alert("clicked");
+                    document.getElementById('optionsPopUp').remove();
+                    // document.getElementById('popup').style.display = "none";
+                    //}
+                    //if (event.target == document.getElementById('optionsPopUp')) {
+                        document.getElementById('optionspopup-content').remove();
+                });
+
+                const popUpContent = document.createElement("div");
+                popUpContent.className = "optionspopup-content";
+                popUpContent.id = "optionspopup-content";
+                // optionsPopUp.appendChild(popUpContent);
+                
+                toolSidePostInformation.appendChild(popUpContent);
+
+                const deleteOption = document.createElement("button");
+                deleteOption.className = "delete-option";
+                deleteOption.type = "submit";
+                deleteOption.textContent = "Delete";
+                // popUpContent.appendChild(deleteOption);
+    
+                deleteOption.addEventListener("click", function(event){
+                    event.preventDefault(); // Prevents the default action if this button is inside a form
+
+                    fetch(`/Home/DeletePost/${postId}`, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                            }
+                            // If successful, remove the post from the DOM
+                            document.getElementById(postId).remove();
+                            // return response.json(); // If your server responds with JSON data
+                        })
+                        .then(data => {
+                            console.log('Success:', data);
+                            deleteContentByPostId(postId);
+                            location.reload();
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
+                    });
+
+                const editOption = document.createElement("button");
+                editOption.className = "edit-option";
+                editOption.textContent = "Edit";
+                // popUpContent.appendChild(editOption);
+                
+                editOption.addEventListener("click", function(event){
+                    event.preventDefault(); // Prevents the default action if this button is inside a form
+                    popUpContent.remove();
+                   
+
+                    const editButtonOptions = document.createElement("div");
+                    editButtonOptions.id = "edit-button-options"
+                    contentArea.appendChild(editButtonOptions);
+
+                    const cancelEditButton = document.createElement("button");
+                    cancelEditButton.id = "cancel-edit-button";
+                    cancelEditButton.textContent = "Cancel";
+                    editButtonOptions.appendChild(cancelEditButton);
+
+                    cancelEditButton.addEventListener("click", function(event){
+                        location.reload();
+                    });
+
+                    const popUpSaveButton = document.createElement("button");
+                    popUpSaveButton.id = "popUpSaveButton";
+                    popUpSaveButton.type = "submit";
+                    popUpSaveButton.textContent = "Save";
+                    // popUpContent.appendChild(popUpSaveButton);
+                    editButtonOptions.appendChild(popUpSaveButton);
+
+                    userTextPosted.disabled = false;
+
+                    postedBox.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center'
+                    });
+
+                    popUpSaveButton.addEventListener("click", function(event){
+                        console.log("Clicked save");
+                        fetch(`/Home/EditPost/${postId}`, { 
+                            method: 'PUT',
+                            headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({ sentText: `${userTextPosted.value}`}), //newTextArea was here instead
+                             })
+                        .then(response => {
+                        if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                        return response.json(); 
+                            })
+                        .then(data => {
+                                console.log("Server Response: ", data);
+                                console.log('Success ID:', data.id);
+                                console.log('Success newText:', data.newText);
+                                console.log('Success newTextArea:', userTextPosted.value);
+                                let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+                                let postsContentOnly = JSON.parse(localStorage.getItem("postsContentOnly") || "[]");
+
+                                console.log('Current Posts:', postsContentOnly); // Log current posts array
+
+                                const index = postsContentOnly.findIndex(post => post.postId === postId);
+                                console.log('Index found:', index); // Log the index
+                                
+                                if (index !== -1) {
+                                    // Update the content for the post with the matching ID
+                                    postsContentOnly[index].content = data.newText;
+                                    postsContentOnly[index].timestamp = new Date().getTime(); // Update the timestamp too if needed
+                                    console.log("Updated Content for PostId " + data.id + " with: " + data.newText);
+                                } else {
+                                    // If post not found, you might want to add it or handle this case differently
+                                    console.log("Post with ID " + data.id + " not found for update.");
+                                    // Optionally add new post if it doesn't exist:
+                                    // postsContentOnly.push({ content: newText, postId: postId, timestamp: new Date().getTime() });
+                                }
+
+                                // Save the updated posts back to localStorage
+                                localStorage.setItem("postsContentOnly", JSON.stringify(postsContentOnly));
+                                console.log('Updated Posts:', JSON.parse(localStorage.getItem("postsContentOnly")));
+                                
+                                location.reload();
+                                
+                                    })
+                                .catch((error) => {
+                            console.error('Error:', error);
+                            });
+ 
+                        });
+                    document.getElementById('optionsPopUp').remove();
+                });
+
+                const menuItemDelete = document.createElement("div");
+                menuItemDelete.className = "menuItem";
+                menuItemDelete.id = "menuItem-delete";
+                menuItemDelete.appendChild(deleteOption);
+
+                const menuItemEdit = document.createElement("div");
+                menuItemEdit.className = "menuItem";
+                menuItemEdit.id = "menuItem-edit";
+                menuItemEdit.appendChild(editOption);
+
+                popUpContent.appendChild(menuItemDelete);
+                popUpContent.appendChild(menuItemEdit);
+
+            });
+        
+            toolSidePostInformation.appendChild(moreButton);
+
+            const userTextPosted = document.createElement("textarea");//0_0 i hope it doesnt break
+            userTextPosted.className = "user-text-posted";
+            userTextPosted.disabled = true;
+            userTextPosted.rows = "1";
+            userTextPosted.innerHTML =  content;//content.replace(/\n/g, "<br>");;//put at end if buggyy
+            // userTextPosted.style.height = "fit-content";
+           
+
+           
+
+             userInfoPostBox.appendChild(userTextPosted);
+
+            //  userTextPosted.addEventListener("keydown", function(e){
+            //         if(this.value.length >= 284 && e.key.length === 1){
+            //              e.preventDefault();
+            //         }else if (e.key === "Backspace" || e.key === "Delete" || e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown"){
+            //             this.readOnly = false;
+            //         }else if (e.key === 'Enter' && e.shiftKey){
+            //             e.preventDefault();
+            //             userTextPosted.value += '\n'; 
+            //         } else if (e.key === 'Enter'){
+            //             e.preventDefault();
+            //             console.log(userTextPosted.value);
+            //         }
+            //     });
+
+
+                // document.querySelectorAll("textarea").forEach(function(textarea) {
+                //     // textarea.style.height = "50px";
+                //     textarea.style.height = textarea.scrollHeight + "px";
+                //     textarea.style.overflowY = "hidden";
+
+                //     textarea.addEventListener("input", function() {
+                //         this.style.height = "auto";
+                //         this.style.height = this.scrollHeight + "px";
+                //     });
+                // });
+
+
+
+             window.addEventListener('click', function(event) {
+                    if (event.target == document.getElementById('popup')) {
+                    document.getElementById('popup').remove();
+                    // document.getElementById('popup').style.display = "none";
+                    }
+                    if (event.target == document.getElementById('optionsPopUp')) {
+                    document.getElementById('optionsPopUp').remove();
+                    // document.getElementById('optionsPopUp').style.display = "none";
+                    }
+                });
+
+            document.getElementById("home-page-container").appendChild(postedBox);
+            console.log("createPostOnly Function Content: " + content);
+        }
+
+        function saveContentOnly(content, postId){
+            let postsContentOnly = JSON.parse(localStorage.getItem("postsContentOnly") || "[]");
+            const now = new Date().getTime(); // Get current timestamp in milliseconds
+            postsContentOnly.push({content: content, postId: postId, timestamp: now});
+            console.log("saveContentOnly Function Content: " + content);
+            localStorage.setItem("postsContentOnly", JSON.stringify(postsContentOnly));
+            createPostOnlyContent(content, postId, now);
+        }
+
+        function deleteContentByPostId(postId) {
+            // Retrieving the current list of posts from Local Storage
+            let postsContentOnly = JSON.parse(localStorage.getItem("postsContentOnly") || "[]");
+            // Filtering out the post with the specified postId
+            postsContentOnly = postsContentOnly.filter(post => post.postId !== postId);
+            // Saving the modified list back to Local Storage
+            localStorage.setItem("postsContentOnly", JSON.stringify(postsContentOnly));
+            console.log(`Post with ID ${postId} has been deleted from Local Storage.`);
+        }
+
+
+        function createPostOnlyImage(imgFile, postId, timestamp){
+            var getProfilePic = localStorage.getItem('userProfilePic'); // Retrieve from localStorage
+            
+            const postedBox = document.createElement("div");
+            postedBox.id = postId;
+            postedBox.className = "posted-box";
+
+            const contentBox = document.createElement("div");
+            contentBox.className = "content-box";
+            postedBox.appendChild(contentBox);
+
+            const contentAreaBox = document.createElement("div");
+            contentAreaBox.className = "content-area-box";
+            contentBox.appendChild(contentAreaBox);
+
+            const userPicture = document.createElement("div");
+            userPicture.className = "user-picture";
+            contentAreaBox.appendChild(userPicture);
+
+            const profilePhotoHolder = document.createElement("div");
+            profilePhotoHolder.className = "profile-picture-holder";
+            userPicture.appendChild(profilePhotoHolder);
+
+            const userProfilePhoto = document.createElement("img");
+            userProfilePhoto.className = "users-profile-picture";
+            userProfilePhoto.id = "users-profile-picture";
+            if (getProfilePic) {
+                userProfilePhoto.src = getProfilePic; // Set the profile picture source
+            }
+            profilePhotoHolder.appendChild(userProfilePhoto);
+
+            const contentArea = document.createElement("div");
+            contentArea.className = "content-area";
+            contentAreaBox.appendChild(contentArea);
+
+            const timer = document.createElement("div");
+            timer.className = "posts-age";
+            function updateAge() {
+                const now = new Date().getTime();
+                const ageInMs = now - timestamp;
+                const seconds = Math.floor(ageInMs / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                // postedAge.textContent = seconds;
+        
+                if (days > 0) {
+                    // Display in days if older than 1 day
+                    timer.textContent = `${days}d`;
+                } else if (hours > 0) {
+                    // Display in hours if older than 1 hour but less than 1 day
+                    timer.textContent = `${hours}h`;
+                } else if (minutes > 0) {
+                    // Display in minutes if older than 1 minute but less than 1 hour
+                    timer.textContent = `${minutes}m`;
+                } else {
+                    // Display in seconds if less than 1 minute old
+                    timer.textContent = `${seconds}s`;
+                }
+            }
+
+            updateAge();
+            setInterval(updateAge, 1000);
+            // postedAge.appendChild(timer);
+
+            const postInformation = document.createElement("div");
+            postInformation.className = "post-information";
+            contentArea.appendChild(postInformation);
+
+            const userSidePostInformation = document.createElement("div");
+            userSidePostInformation.className = "user-side-post-information";
+            postInformation.appendChild(userSidePostInformation);
+
+            const usersProfileName = document.createElement("div");
+            usersProfileName.className = "users-profile-name";
+            usersProfileName.textContent = "JarJarBeats" 
+            userSidePostInformation.appendChild(usersProfileName);
+
+            const usersUserName = document.createElement("div");
+            usersUserName.className = "users-user-name";
+            usersUserName.textContent = "@jarjarbeats • ";
+            userSidePostInformation.appendChild(usersUserName);
+            userSidePostInformation.appendChild(timer);
+
+
+            const toolSidePostInformation = document.createElement("div");
+            toolSidePostInformation.className = "tool-side-post-information"
+            postInformation.appendChild(toolSidePostInformation);
+//HERE JUAN-------------------
+            const options = document.createElement("div");
+            options.id = "options";
+            options.className = "options";           
+
+            const moreButton = document.createElement("button");
+            moreButton.id = "drop-down-list";
+            moreButton.className = "drop-down-list";
+            
+            moreButton.addEventListener("click", function(){
+                    // options.style.visibility = "visible";
+                    // options.style.visibility = "visible";
+                // buttonClick++;
+                    // console.log("Click");
+
+                // const optionsPopUp = document.createElement("div");
+                // optionsPopUp.id = "optionsPopUp";
+                // optionsPopUp.className = "optionsPopUp";
+                // toolSidePostInformation.appendChild(optionsPopUp); // COME BHACK HERE AND REMEMBER YOU CHANGED IT FROM POSTEDBOX TO THIS
+
+                // const popUpContent = document.createElement("div");
+                // popUpContent.className = "optionspopup-content";
+                // optionsPopUp.appendChild(popUpContent);
+
+                // document.addEventListener('mousemove', function(e) {
+                // cursorDiv.style.left = e.clientX + 'px';
+                // cursorDiv.style.top = e.clientY + 'px';
+                // });
+
+
+                const optionsPopUp = document.createElement("div");
+                optionsPopUp.id = "optionsPopUp";
+                optionsPopUp.className = "optionsPopUp";
+                //toolSidePostInformation.appendChild(optionsPopUp); // COME BHACK HERE AND REMEMBER YOU CHANGED IT FROM POSTEDBOX TO THIS
+                postedBox.appendChild(optionsPopUp);
+
+
+                optionsPopUp.addEventListener("click", function(event){
+                    // alert("clicked");
+                    document.getElementById('optionsPopUp').remove();
+                    // document.getElementById('popup').style.display = "none";
+                    //}
+                    //if (event.target == document.getElementById('optionsPopUp')) {
+                        document.getElementById('optionspopup-content').remove();
+                });
+
+                const popUpContent = document.createElement("div");
+                popUpContent.className = "optionspopup-content";
+                popUpContent.id = "optionspopup-content";
+                // optionsPopUp.appendChild(popUpContent);
+                
+                toolSidePostInformation.appendChild(popUpContent);
+
+                const deleteOption = document.createElement("button");
+                deleteOption.className = "delete-option";
+                deleteOption.type = "submit";
+                deleteOption.textContent = "Delete";
+                // popUpContent.appendChild(deleteOption);
+    
+                deleteOption.addEventListener("click", function(event){
+                    event.preventDefault(); // Prevents the default action if this button is inside a form
+
+                    fetch(`/Home/DeletePost/${postId}`, {
+                        method: 'DELETE'
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                            }
+                            // If successful, remove the post from the DOM
+                            document.getElementById(postId).remove();
+                            // return response.json(); // If your server responds with JSON data
+                        })
+                        .then(data => {
+                            console.log('Success:', data);
+                            deleteImageOnlyPostByPostId(postId);
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                        });
+                    });
+
+                const menuItemDelete = document.createElement("div");
+                menuItemDelete.className = "menuItem";
+                menuItemDelete.id = "menuItem-delete";
+                menuItemDelete.appendChild(deleteOption);
+
+                popUpContent.appendChild(menuItemDelete);
+            });
+        
+             toolSidePostInformation.appendChild(moreButton);
+
+            //  window.addEventListener('click', function(event) {
+            //         if (event.target == document.getElementById('popup')) {
+            //         document.getElementById('popup').remove();
+            //         // document.getElementById('popup').style.display = "none";
+            //         }
+            //         if (event.target == document.getElementById('optionsPopUp')) {
+            //         document.getElementById('optionsPopUp').remove();
+            //         // document.getElementById('optionsPopUp').style.display = "none";
+            //         }
+            //     });
+
+            const imgBox = document.createElement("div");
+            imgBox.className = "img-box";
+            contentArea.appendChild(imgBox);
+
+            const imgData = document.createElement("img");
+            imgData.className = "preview";
+            imgData.src = "/images/uploads/" + imgFile; 
+            imgBox.appendChild(imgData);
+
+            // const imgData = document.createElement("img");
+            // imgData.className = "preview";
+            // imgData.src = "/images/uploads/" + imgFile; 
+            // contentArea.appendChild(imgData);
+            console.log("createPostImageOnly Function: " + imgFile);
+            document.getElementById("home-page-container").appendChild(postedBox);
+        }
+
+        function saveImageOnly(imgFile, postId){
+            let postsImageOnly = JSON.parse(localStorage.getItem("postsImageOnly") || "[]");
+            const now = new Date().getTime(); 
+            postsImageOnly.push({imgFile: imgFile, postId, timestamp: now});
+            console.log("saveImageOnly Function: " + postsImageOnly);
+            localStorage.setItem("postsImageOnly", JSON.stringify(postsImageOnly));
+            createPostOnlyImage(imgFile, postId, now);
+        }
+        
+        function deleteImageOnlyPostByPostId(postId) {
+            // Retrieving the current list of posts from Local Storage
+            let postsImageOnly = JSON.parse(localStorage.getItem("postsImageOnly") || "[]");
+            // Filtering out the post with the specified postId
+            postsImageOnly = postsImageOnly.filter(post => post.postId !== postId);
+            // Saving the modified list back to Local Storage
+            localStorage.setItem("postsImageOnly", JSON.stringify(postsImageOnly));
+            console.log(`Post with ID ${postId} has been deleted from Local Storage.`);
+        }
+
+
+
+        submitButton.addEventListener("click", function(event){ 
+            event.preventDefault(); 
+
+            const fileInput = document.getElementById('file-selector');
+            const formData = new FormData();
+            
+
+            if (fileInput.files[0]) {
+                formData.append('image', fileInput.files[0]);
+            }
+            if (textArea.value) {
+                formData.append('content', textArea.value);
+            }
+
+            fetch(`/createPost`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+               
+                return response.json(); 
+            })
+            .then(data => {
+                console.log('Success:', data);
+                // console.log('id found:', data.id);
+                console.log('text found:', data.newText);
+                console.log('image found:', data.img);
+
+                if(data.newText && data.img){
+                    saveContent(data.newText, data.img, data.id);
+                }
+                else if(data.newText && !data.img){
+                    saveContentOnly(data.newText, data.id);
+                }
+                else if(!data.newText && data.img){
+                    saveImageOnly(data.img, data.id);
+                }
+                    location.reload(); 
+                })
+                    .catch((error) => {
+                    console.error('Error:', error);
+                   
+                });
+
+          
+        });
+     
+        document.querySelectorAll("textarea").forEach(function(textarea) {
+                // textarea.style.height = "10px";
+                textarea.style.height = textarea.scrollHeight + "px";
+                textarea.style.overflowY = "hidden";
+
+                textarea.addEventListener("input", function() {
+                    this.style.height = "auto";
+                    this.style.height = this.scrollHeight + "px";
+                });
+            });
+
+        
+        // window.addEventListener('click', function(event) {
+        //             if (event.target == document.getElementById('home-page-container') || event.target == document.body) {
+                        
+                        
+        //                 document.getElementById('optionsPopUp').remove();
+        //             // // document.getElementById('popup').style.display = "none";
+        //             // //}
+        //             // //if (event.target == document.getElementById('optionsPopUp')) {
+        //                 document.getElementById('optionspopup-content').remove();
+                    
+        //             // document.getElementById('popup').remove();
+        //             // document.getElementById('popup-content').remove();
+        //             // document.getElementById('optionsPopUp').style.display = "none";
+        //             }
+                    
+        //         });
+
+        window.onload = function(){
+            let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+            let postsContentOnly = JSON.parse(localStorage.getItem("postsContentOnly") || "[]");
+            let postsImageOnly = JSON.parse(localStorage.getItem("postsImageOnly") || "[]");
+            let userProfileImage = JSON.parse(localStorage.getItem("userProfileImage") || "[]");
+            // localStorage.setItem("postsContentOnly", JSON.stringify(postsContentOnly));
+            const savedProfilePic = localStorage.getItem('userProfilePic');
+            document.getElementById("users-profile-picture").src = savedProfilePic;
+                
+            let allPosts = [
+                ...postsContentOnly.map(post => ({...post, isImagePost: false})),
+                ...posts.map(post => ({...post, isImagePost: true})),
+                ...postsImageOnly.map(post => ({...post, isImagePost: true, hasContent: false})) // Assuming postsImageOnly might not have content
+            ];
+            
+            allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            allPosts.forEach(function(post) {
+                if (post.isImagePost) {
+                    if (!post.content && post.imgFile) {
+                        // This post only has an image and no text
+                        createPostOnlyImage(post.imgFile, post.postId, post.timestamp);
+                    } else {
+                        // This post has both text and an image
+                        createPost(post.content, post.imgFile, post.postId, post.timestamp);
+                    }
+                } else {
+                    // This post only has text
+                    createPostOnlyContent(post.content, post.postId, post.timestamp);
+                }
+            });
+        };
+    
+        // localStorage.clear();
+
+    </script>
+
+</body>
+</html>

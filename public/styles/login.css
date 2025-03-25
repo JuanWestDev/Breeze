@@ -1,0 +1,118 @@
+body{
+    background-color: rgb(7 7 7);
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+svg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* width: 100vw;
+  height: 100vh; */
+}
+
+#underwater-scene {
+  background: linear-gradient(to bottom, #000000, #181818, #000000);
+}
+
+
+
+.login-container{
+    display: flex;
+    position: relative;
+    justify-content: center;
+    justify-self: center;
+    align-items: center;
+    top: -175px;
+    height: 1000px;
+    /* width: 1000px; */
+    z-index: 1000;
+}
+
+.login-box{
+  display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      max-height: 350px;
+      width: 385px;
+      background-color: #f0f0f0;
+      border-radius: 55px;
+      border-style: solid;
+      border-color: black;
+      margin-bottom: 10%;
+      box-shadow: 0 0 5px #ffffff;
+}
+
+.login-form{
+    display:flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-items: center;
+    justify-content: center;
+    /* height: 500px; */
+    width: 500px;
+    margin-top: 90px;
+    
+
+}
+
+h1{
+    /* margin-right: 75px; */
+    font-size: 45px;
+}
+
+.formL{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    margin-bottom: 100px;
+}
+
+#username, #password{
+  height: 45px;
+  width: 250px;
+  padding: 3px;
+  font-size: 17px;
+  margin: 5px;
+  border: 1px solid gray;
+  border-radius: 10px;
+}
+
+
+.login-button{
+  width: 90px;
+  padding: 10px;
+  /* margin-top: 100px; */
+  background-color: rgb(20, 18, 18);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 18px;
+  border:none;
+  cursor: pointer;
+  margin: 5px;
+
+  &:hover{
+    background-color: rgba(36, 36, 36, 5);
+  }
+}
+
+@media(max-width: 465px){
+  .login-box{
+    width: 275px;
+  }
+
+  h1{
+    font-size: 36px;
+  }
+}
+
