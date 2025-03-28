@@ -19,7 +19,7 @@ Breeze is a private microblogging mobile app with a custom API, allowing users t
 ![Breeze image post display](https://github.com/user-attachments/assets/2dc6bfe5-57c9-4248-b911-1ac40ff3ede8)
 
 
-#Change Profile Picture:
+# Change Profile Picture:
 ![Breeze change profile picture](https://github.com/user-attachments/assets/7522f104-564d-4cdb-a4ee-a08c3c1a781a)
 
 
