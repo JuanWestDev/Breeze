@@ -41,4 +41,16 @@ Breeze is a private microblogging mobile app with a custom API, allowing users t
    ```bash
    cd Breeze
    ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the server:
+   ```bash
+   nodemon index.js
+   ```
+   ```bash
+   node index.js
+   ```
+5. Open http://localhost:3000 in your browser.
 
